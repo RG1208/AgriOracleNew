@@ -10,6 +10,9 @@ import joblib
 import os
 import uuid
 from flask_cors import CORS  # type: ignore
+import pathlib
+import socket
+from contextlib import closing
 
 app = Flask(__name__)
 CORS(app)  # type: ignore
@@ -30,16 +33,21 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+HERE = pathlib.Path(__file__).parent.resolve()
+MODEL1 = HERE / "all_3_classification_mobilenetv2.h5"
+MODEL2 = HERE / "crop_rotation_model.h5"
+MODEL3 = HERE / "intercropping_model.h5"
+
 # Load models
-disease_model = load_model("all_3_classification_mobilenetv2.h5")
-rotation_model = tf.keras.models.load_model("crop_rotation_model.h5")
-intercrop_model = tf.keras.models.load_model("intercropping_model.h5")
+disease_model = load_model(str(MODEL1))
+rotation_model = tf.keras.models.load_model(str(MODEL2))
+intercrop_model = tf.keras.models.load_model(str(MODEL3))
 
 # Load encoders for crop rotation
-encoder = joblib.load("feature_encoder.pkl")
-y_encoder = joblib.load("label_encoder.pkl")
-intercrop_encoder = joblib.load("intercrop_encoder.pkl")
-intercrop_y_encoder = joblib.load("intercrop_label_encoder.pkl")
+encoder = joblib.load(HERE / "feature_encoder.pkl")
+y_encoder = joblib.load(HERE / "label_encoder.pkl")
+intercrop_encoder = joblib.load(HERE / "intercrop_encoder.pkl")
+intercrop_y_encoder = joblib.load(HERE / "intercrop_label_encoder.pkl")
 
 # Class labels for disease detection
 disease_class_labels = [
@@ -235,5 +243,13 @@ def recommend_intercrop():
         print(f"❌ Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(debug=False)
+def find_free_port():
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(('', 0))
+        return s.getsockname()[1]
+
+if __name__ == "__main__":
+    port = find_free_port()
+    print(f"Running on port {port}")
+    app.run(host="0.0.0.0", port=port)
+
