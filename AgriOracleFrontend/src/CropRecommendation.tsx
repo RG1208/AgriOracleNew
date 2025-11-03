@@ -18,7 +18,7 @@ const CropRecommendation = () => {
     setRecommendedCrop(null);
 
     try {
-      const response = await axios.post('http://127.0.0.1:5000/recommend_crop', {
+      const response = await axios.post('http://127.0.0.1:51458/recommend_crop', {
         previous_crop: previousCrop,
         soil_type: soilType,
         season,

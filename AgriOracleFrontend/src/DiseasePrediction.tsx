@@ -23,7 +23,7 @@ const DiseasePrediction = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/predict_disease', {
+      const response = await fetch('http://127.0.0.1:51458/predict_disease', {
         method: 'POST',
         body: formData,
       });
